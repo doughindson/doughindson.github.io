@@ -1,0 +1,52 @@
+---
+import '@fontsource/figtree/300.css';
+import '@fontsource/figtree/400.css';
+import '@fontsource/figtree/700.css';
+import '../styles/tokens.css';
+import '../styles/global.css';
+// Preloaded so text (above all the nav labels) is drawn in Figtree from the first frame instead of swapping in after.
+import figtreeLight from '@fontsource/figtree/files/figtree-latin-300-normal.woff2?url';
+import figtreeRegular from '@fontsource/figtree/files/figtree-latin-400-normal.woff2?url';
+
+interface Props { title: string; description?: string; image?: string; bodyClass?: string; zone?: string }
+const { title, description = 'Doug Hindson is a creative director, designer, illustrator and photographer based in Oslo.', image, bodyClass, zone } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).toString().replace(/(?<=.)\/$/, '');
+const ogImage = new URL(image ?? '/og-default.jpg', Astro.site).toString();
+const beacon = import.meta.env.PUBLIC_CF_BEACON_TOKEN;
+// Preview builds (GitHub Pages) stay out of search results, so they never compete with the real site.
+const noindex = import.meta.env.PUBLIC_NOINDEX === '1';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href={figtreeLight} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={figtreeRegular} as="font" type="font/woff2" crossorigin />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#f2f2f2" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Doug Hindson" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="google-site-verification" content="mwNZungO7xryZ0XLSNOSGsmfZbguzYk8PhT93mdiC6M" />
+    <slot name="head" />
+  </head>
+  <body class={bodyClass} data-zone={zone} data-mode={zone}>
+    <slot />
+    {beacon && <script is:inline defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: beacon })}></script>}
+  </body>
+</html>

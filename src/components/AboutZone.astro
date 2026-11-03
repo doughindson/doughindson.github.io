@@ -1,0 +1,21 @@
+---
+import { getEntry, render } from 'astro:content';
+const about = await getEntry('pages', 'about');
+if (!about) throw new Error('content/about.md not found');
+const { Content } = await render(about);
+const d = about.data;
+---
+<section id="about" class="zone zone-about" aria-label="About" data-zone-section="about">
+  <div class="about" data-about-content>
+    <div class="about__aside">
+      <p class="about__title" aria-hidden="true" data-about-title><span class="line"><a class="sentence__name" href="/" tabindex="-1">Doug Hindson</a> is a</span><span class="line">Creative Director,</span><span class="line">designer,</span><span class="line">illustrator,</span><span class="line">&amp; photographer.</span></p>
+      <div class="contact">
+        <p>{d.location}<br />{d.phone}</p>
+        <p><a href={`mailto:${d.email}`}>{d.email}</a></p>
+        <p>{d.socials?.map((s, i) => (<>{i > 0 && ' · '}<a href={s.href}>{s.label}</a></>))}</p>
+        <p class="contact__copyright">{d.copyright}</p>
+      </div>
+    </div>
+    <div class="bio"><Content /></div>
+  </div>
+</section>

@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+.env
+.env.*
+!.env.example
+# local scratch / reference material from the Squarespace export
+reference/raw-html/
+tools/node_modules/
+
+# exported Squarespace videos: not used by the site (they're headed for Vimeo/YouTube), and too big for the repo
+content/**/*.mp4
+content/**/*.mov

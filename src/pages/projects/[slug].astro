@@ -1,0 +1,30 @@
+---
+import { getCollection, render } from 'astro:content';
+import { getImage } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import SiteNav from '../../components/SiteNav.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('pages', (p) => p.data.type === 'project');
+  return projects.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const og = entry.data.cover_image ? (await getImage({ src: entry.data.cover_image, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src : undefined;
+---
+<Base title={`${entry.data.title} — Doug Hindson`} description={entry.data.description ?? `${entry.data.title}, a project by Doug Hindson.`} image={og} zone="projects">
+  <SiteNav current="projects" />
+  <main class="project-page">
+    <article class="project">
+      <h1 class="project__title">{entry.data.title}</h1>
+      <div class="prose"><Content /></div>
+    </article>
+    <!-- Back to the list; clicking it slides "Projects" up into the list's header (see scripts/project.ts). -->
+    <div class="project-end">
+      <a class="project-end__label" href="/projects" data-project-end><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">Projects</span></a>
+    </div>
+  </main>
+  <script>import '../../scripts/project.ts';</script>
+  <!-- Get the Projects list ready in the background (Chrome / Edge prerender it), so returning to it is instant. -->
+  <script type="speculationrules" is:inline>{ "prerender": [{ "urls": ["/projects"], "eagerness": "immediate" }] }</script>
+</Base>

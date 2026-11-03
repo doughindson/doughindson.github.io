@@ -1,0 +1,13 @@
+---
+// `current` marks a section as active (the home page sets it from script as you move between zones).
+interface Props { current?: 'about' | 'projects' }
+const { current } = Astro.props;
+---
+<nav class="site-nav" aria-label="Primary">
+  <div class="site-nav__bar">
+  <div class="site-header-bg" aria-hidden="true"></div>
+  <a class="nav-about" href="/about" data-zone-link="about" aria-current={current === 'about' ? 'true' : undefined}><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">About</span></a>
+  <a class="nav-name" href="/" data-zone-link="top" tabindex="-1" aria-hidden="true"><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">Doug Hindson</span></a>
+  <a class="nav-projects" href="/projects" data-zone-link="projects" aria-current={current === 'projects' ? 'true' : undefined}><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">Projects</span></a>
+  </div>
+</nav>

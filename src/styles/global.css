@@ -1,0 +1,398 @@
+*, *::before, *::after { box-sizing: border-box; }
+/* The page colour is also set on <html> (and the light scheme declared) so nothing dark can show through during page
+   transitions, when the browser draws the old and new pages over the bare canvas. */
+html { -webkit-text-size-adjust: 100%; scroll-behavior: auto; scrollbar-gutter: stable; background: var(--color-bg-page); color-scheme: light; }
+html.is-locked, html.edge-hold { overflow: hidden; }
+body {
+  margin: 0;
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-base);
+  font-weight: 300;
+  font-size: var(--type-body-m-size);
+  line-height: var(--type-body-m-line-height);
+  -webkit-font-smoothing: antialiased;
+}
+img { display: block; max-width: 100%; height: auto; }
+a { color: var(--color-text-link); text-underline-offset: 0.18em; }
+h1, h2, h3, p, ul { margin: 0; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+:focus-visible { outline: 2px solid var(--color-text-link); outline-offset: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip-link { position: absolute; left: var(--page-gutter); top: -100px; z-index: 100; background: var(--color-bg-page); padding: var(--space-200) var(--space-400); }
+.skip-link:focus { top: var(--space-200); }
+
+/* Between the 767px breakpoint and the 1440 design the side gutters scale down (tokens give the 1440 / mobile values). */
+/* On windows wider than the 1440 design the content column stays 1000px and is centred (the gutter grows to match). */
+@media (min-width: 768px) { :root { --page-gutter: max(clamp(48px, 15.28vw, 220px), calc((100vw - var(--sbw, 0px) - var(--content-width)) / 2)); --wide-gutter: clamp(32px, 8vw, 115.2px); } }
+
+/* ---------- display sentence ---------- */
+.display {
+  font-size: var(--type-display-size);
+  line-height: var(--type-display-line-height);
+  letter-spacing: var(--type-display-letter-spacing);
+  font-weight: 400;
+}
+
+/* ---------- fixed navigation (positions depend on the active zone) ---------- */
+.site-nav { position: fixed; inset: 0; z-index: 10; pointer-events: none; }
+.site-nav a {
+  position: absolute;
+  pointer-events: auto;
+  text-decoration: none;
+  color: var(--color-nav-default);
+  font-size: var(--type-nav-size);
+  line-height: 1;
+  font-weight: 300;
+  transition: color 0.3s, opacity 0.3s;
+}
+.site-nav a:hover, .site-nav a[aria-current='true'] { color: var(--color-nav-active); }
+.site-nav .nav-about { top: calc(var(--header-height) / 2); left: var(--page-gutter); transform: translateY(-50%); }
+.site-nav .nav-projects { bottom: calc(var(--footer-height) / 2); left: var(--page-gutter); transform: translateY(50%); }
+.site-nav .nav-name { top: calc(var(--header-height) / 2 + 40px); left: var(--page-gutter); transform: translateY(-50%); opacity: 0; pointer-events: none; font-weight: 400; } /* the homepage sentence's weight, so the name keeps it as it lands here */
+/* projects: About / Doug Hindson / Projects stacked at the top */
+body[data-zone='projects'] .nav-projects { top: calc(var(--header-height) / 2 + 80px); bottom: auto; transform: translateY(-50%); }
+body[data-zone='projects'] .nav-name { opacity: 1; pointer-events: auto; top: calc(var(--header-height) / 2 + 40px); }
+@media (max-width: 767px) {
+  .site-nav a { font-size: 24px; }
+  .site-nav .nav-about { top: 24px; transform: none; left: var(--page-gutter); }
+  .site-nav .nav-projects { bottom: 24px; transform: none; left: var(--page-gutter); }
+  .site-nav .nav-name { top: 56px; transform: none; }
+  body[data-zone='projects'] .nav-projects { top: 96px; transform: none; }
+  body[data-zone='projects'] .nav-name { top: 60px; transform: none; }
+}
+
+/* ---------- zones ---------- */
+.zone { position: relative; }
+
+/* hero */
+.hero-track { position: relative; }
+.hero-stage {
+  min-height: 100svh;
+  padding: var(--header-height) var(--page-gutter) var(--footer-height);
+  display: flex;
+  align-items: center;
+}
+/* Sentence size: the design size, but never wider than the column allows (9 em per role line) and never taller than
+   the space between the header and footer allows (5 lines at 1.144, leaving room for an open role image). */
+.sentence {
+  --sentence-w: min(100vw - var(--sbw, 0px) - 2 * var(--page-gutter), var(--content-width));
+  --sentence-size: min(var(--type-display-size), calc(var(--sentence-w) / 9), calc((100svh - var(--header-height) - var(--footer-height)) / 5.72 * 0.65));
+  width: min(100%, var(--content-width)); color: var(--color-text-muted);
+}
+.sentence.display { font-size: var(--sentence-size); line-height: 1.144; }
+/* tablet and desktop: the sentence about 20% smaller */
+@media (min-width: 768px) { .sentence { --sentence-size: calc(0.8 * min(var(--type-display-size), calc(var(--sentence-w) / 9), calc((100svh - var(--header-height) - var(--footer-height)) / 5.72 * 0.65))); } }
+.sentence__name { color: var(--color-text-primary); }
+.role__button { display: inline; color: inherit; transition: color 0.15s; }
+.role[data-active] .role__button { color: var(--color-text-accent); }
+.role { display: block; }
+.role__media { display: grid; grid-template-rows: 1fr; margin-block: var(--space-200); }
+.role__media-inner { min-height: 0; overflow: hidden; position: relative; }
+/* slideshow: the frames sit on top of each other and home.ts cuts between them (no fade); only the first shows otherwise */
+/* Slideshow (home.ts marks the frame on screen [data-current] and the one it replaces [data-prev]): the frames sit on
+   top of each other, the incoming one above the outgoing one, which stays put underneath until it is covered. */
+.role__media picture { position: relative; visibility: hidden; z-index: 0; }
+.role__media picture + picture { position: absolute; inset: 0; }
+.role__media picture:first-child:not(:has(~ [data-current])), .role__media picture:is([data-current], [data-prev]) { visibility: visible; }
+.role__media picture[data-prev] { z-index: 1; }
+.role__media picture[data-current] { z-index: 2; }
+.role__media picture[data-current]:not([data-still]) { animation: var(--slide-in) var(--slide-in-ms) cubic-bezier(0.4, 0, 0.2, 1) both; }
+[data-slideshow='fade'] { --slide-in: slide-fade; --slide-in-ms: 600ms; }
+[data-slideshow='zoom'] { --slide-in: slide-fade; --slide-in-ms: 500ms; }
+[data-slideshow='zoom'] picture:is([data-current], [data-prev]) img { animation: slide-zoom 2.4s linear both; } /* keeps drifting under the next one */
+[data-slideshow='slide'] { --slide-in: slide-push; --slide-in-ms: 550ms; }
+[data-slideshow='slide'] picture[data-prev] { animation: slide-away 550ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+[data-slideshow='focus'] { --slide-in: slide-focus; --slide-in-ms: 700ms; }
+[data-slideshow='cut'] { --slide-in: none; }
+@keyframes slide-fade { from { opacity: 0; } }
+@keyframes slide-zoom { from { transform: scale(1); } to { transform: scale(1.07); } }
+@keyframes slide-push { from { transform: translateX(100%); } }
+@keyframes slide-away { to { transform: translateX(-30%); } }
+@keyframes slide-focus { from { opacity: 0; filter: blur(14px); transform: scale(1.04); } }
+.role__media picture, .role__media img { display: block; width: 100%; }
+.role__media img { height: min(clamp(min(120px, 18svh), calc(100svh - var(--header-height) - var(--footer-height) - 5 * var(--sentence-size) * 1.144 - 3 * var(--space-200)), 540px), calc(var(--sentence-w) * 0.62)); /* never taller than a landscape crop of the column */ object-fit: cover; background: var(--color-bg-media); }
+
+/* interactive (JS + motion allowed): sticky stage, roles open one at a time as you scroll */
+/* The hero is one screen: scrolling only moves between About, the hero and Projects. Roles open on hover / pointer position. */
+.js-scroll .hero-track { height: 100svh; }
+.js-scroll .hero-stage { position: sticky; top: 0; height: 100svh; min-height: 0; }
+.sentence-layer { display: contents; }
+.js-scroll .sentence-layer { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; padding: var(--header-height) var(--page-gutter) var(--footer-height); pointer-events: none; }
+.js-scroll .sentence { pointer-events: auto; transform-origin: 0 0; will-change: transform, opacity; }
+.js-scroll .role__media { grid-template-rows: 0fr; margin-block: 0; transition: grid-template-rows 0.32s cubic-bezier(0.2, 0.7, 0.2, 1), margin 0.32s cubic-bezier(0.2, 0.7, 0.2, 1); } /* fairly quick: images open and close as the pointer moves between roles */
+.js-scroll .role[data-active] .role__media { grid-template-rows: 1fr; margin-block: var(--space-200); cursor: pointer; } /* clicking it opens that role's projects */
+.js-scroll .sentence.is-morphing { transition: transform 0.8s cubic-bezier(0.65, 0, 0.25, 1); }
+.settle .role__media { transition: none !important; }
+/* coming back from Projects the name leaves its label quickly (ease-out) instead of idling first */
+.js-scroll .sentence__name { display: inline-block; transform-origin: 0 50%; transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1), color 0.8s; }
+.js-scroll .sentence__is, .js-scroll .role { transition: opacity 0.4s 0.4s; }
+/* Projects: "Doug Hindson" shrinks onto the nav label while the rest of the sentence fades; then the nav label takes over. */
+.js-scroll body[data-mode='projects'] .sentence__name { color: var(--color-nav-default); transition: transform 0.8s cubic-bezier(0.65, 0, 0.25, 1), color 0.8s; }
+.js-scroll body[data-mode='projects'] .sentence__is, .js-scroll body[data-mode='projects'] .role { opacity: 0; transition: opacity 0.4s; }
+.js-scroll body[data-mode='projects'] .sentence { visibility: hidden; transition: visibility 0s 0.85s; }
+.js-scroll .site-nav .nav-name { transition: opacity 0s, color 0.3s, background-color 0.3s; }
+.js-scroll body[data-zone='projects'] .site-nav .nav-name { transition: opacity 0s 0.8s, color 0.3s, background-color 0.3s; }
+/* Projects: the grid fades in once the name has settled, and fades out first when leaving. */
+.js-scroll :is(.project-grid, .project-filter, .back-to-top) { transition: opacity 0.5s 0.85s, visibility 0s 0.85s; }
+.js-scroll body:not([data-mode='projects']) :is(.project-grid, .project-filter, .back-to-top) { opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0s 0.3s; }
+/* Leaving About: the About text fades out first, then the sentence grows. Entering About: the sentence finishes shrinking, then the text fades in. */
+.js-scroll body[data-mode='hero'] .sentence.is-morphing { transition-delay: 0.35s; }
+/* back from Projects the rest of the sentence travels with the name (home.ts), so it can start appearing straight away */
+.js-scroll .sentence.is-returning :is(.sentence__is, .role) { transition: opacity 0.5s 0.1s; }
+.js-scroll [data-about-content] .contact, .js-scroll [data-about-content] .bio { transition: opacity 0.5s 0.85s, visibility 0s 0.85s; }
+.js-scroll body:not([data-mode='about']) [data-about-content] .contact, .js-scroll body:not([data-mode='about']) [data-about-content] .bio { opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0s 0.3s; }
+
+/* about */
+.zone-about { padding: var(--header-height) var(--page-gutter) var(--space-1600); min-height: 100svh; }.about { display: grid; grid-template-columns: var(--aside-width) minmax(0, 1fr); gap: var(--space-1600); padding-top: 0; width: min(100%, var(--content-width)); }
+.bio { padding-top: 100px; }
+.about__title { font-size: var(--type-heading-m-size); line-height: 1.144; color: var(--color-text-muted); font-weight: 300; }
+.about__title .sentence__name { color: var(--color-text-primary); }
+.about__title .accent { color: var(--color-text-muted); }
+.about__title .line { display: block; white-space: nowrap; } /* same five lines as the hero sentence it stands in for */
+.js-scroll .about__title { visibility: hidden; }
+/* Desktop: the left column is as tall as the space between the About and Projects labels, with its content centred in it. */
+.about__aside { position: sticky; top: var(--header-height); align-self: start; height: calc(100svh - var(--header-height) - var(--footer-height)); display: flex; flex-direction: column; justify-content: safe center; }
+.about__aside .contact { margin-top: var(--space-500); }
+.contact { display: grid; gap: var(--space-400); margin-top: var(--space-500); font-size: var(--type-body-s-size); line-height: var(--type-body-s-line-height); color: var(--color-text-body); }
+.contact p { margin: 0; }
+.contact__copyright { color: var(--color-text-link); font-size: var(--type-body-s-size); }
+.bio { display: grid; align-content: start; gap: var(--space-600); font-size: var(--type-body-s-size); line-height: var(--type-body-s-line-height); color: var(--color-text-body); }
+.bio p, .bio ul { margin: 0; }
+.bio ul { list-style: none; padding: 0; }
+.bio strong { font-weight: 300; color: var(--color-text-subheading); display: block; margin-bottom: var(--space-100); }
+/* One column for About on phones, portrait tablets and short landscape windows (two columns need ~1000px of width and
+   enough height for the pinned left column). */
+@media (max-width: 1023px), (max-height: 520px) {
+  .zone-about { padding: var(--header-height) var(--page-gutter) var(--space-1600); min-height: 0; }
+  .about__aside { position: static; height: auto; display: block; }
+  .bio { padding-top: 0; }
+  .about { grid-template-columns: 1fr; gap: var(--space-800); padding-top: 32px; }
+  .about__title { font-size: 30px; }
+  .bio { font-size: var(--type-body-m-size); line-height: var(--type-body-m-line-height); }
+}
+
+/* projects */
+.zone-projects { padding: calc(var(--header-height) + 100px) var(--page-gutter) var(--footer-height); min-height: 100svh; }
+/* Same column as the rest of the site. The grid is container-driven: one column when the column is narrow, two once it has room. */
+.zone-projects { container-type: inline-size; }
+/* pulling down at the top of the list gives a little before it lets go (home.ts sets --pull) */
+.zone-projects, .js-scroll .bio { translate: 0 var(--pull, 0px); } /* …and pulling on past the end of About, the bio */
+.zone-projects.pull-release { transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.js-scroll [data-about-content] .bio.pull-release { transition: opacity 0.5s 0.85s, visibility 0s 0.85s, translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.project-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--grid-gap); list-style: none; padding: 0; width: min(100%, var(--content-width)); }
+@container (min-width: 560px) { .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px) {
+  .zone-projects { padding-top: 160px; }
+}
+.card { display: block; text-decoration: none; }
+.card__media { container-type: inline-size; position: relative; display: block; aspect-ratio: 594.8 / 446.1; overflow: hidden; background: var(--color-bg-media); }
+@media (max-width: 767px) { .card__media { aspect-ratio: 343.2 / 257.4; } }
+.card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.card__title {
+  /* Hover overlay, as the Figma Project Card: the whole tile washed with the page colour, title centred */
+  position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-500);
+  background: color-mix(in srgb, var(--color-bg-page) 75%, transparent); /* lighter than the Figma overlay (90%) so the blur shows */
+  color: var(--color-text-body); text-align: center;
+  font-size: clamp(16px, 5.5cqi, var(--type-heading-s-size)); line-height: 1.2; font-weight: 400;
+  letter-spacing: var(--type-heading-s-letter-spacing);
+  /* the image behind blurs progressively (0 → 10px) as the wash comes up */
+  -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0);
+  opacity: 0; transition: opacity 0.25s, backdrop-filter 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), -webkit-backdrop-filter 0.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.card:hover .card__title, .card:focus-visible .card__title { opacity: 1; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.card:hover img { transform: scale(1.02); }
+/* Phones and tablets (and any device without hover): no overlay; a small title sits under each tile instead.
+   (The caption is the link's accessible name everywhere; on desktop it is only visually hidden.) */
+.card { position: relative; }
+.card__caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (hover: none), (max-width: 1023px) {
+  .card__title { display: none; }
+  .card__caption { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: normal; display: block; padding-top: var(--space-300); color: var(--color-text-body); font-size: var(--type-body-s-size); line-height: var(--type-body-s-line-height); }
+}
+
+/* ---------- project page ---------- */
+.project-page { padding: calc(var(--stack-header-h) + 40px) var(--page-gutter) 0; }
+.project { width: min(100%, var(--content-width)); }
+.project__title { font-size: var(--type-heading-m-size); line-height: var(--type-heading-m-line-height); color: var(--color-text-accent); font-weight: 300; margin-bottom: var(--space-1000); }
+.prose { display: grid; gap: var(--space-1000); }
+.prose > * { margin: 0; }
+.prose p { color: var(--color-text-body); }
+.prose a { color: var(--color-text-link); }
+.prose h2, .prose h3 { font-weight: 400; font-size: var(--type-heading-s-size); line-height: 1.2; color: var(--color-text-primary); }
+.prose ul, .prose ol { padding-left: 1.2em; }
+.prose img { width: 100%; height: auto; }
+.image-group { display: grid; gap: var(--gallery-gap); grid-template-columns: 1fr; }
+.image-group[data-count='2'] { grid-template-columns: repeat(2, 1fr); }
+.image-group:not([data-count='1']):not([data-count='2']) { grid-template-columns: repeat(auto-fill, minmax(var(--gallery-item), 1fr)); }
+.image-group a { display: block; }
+.credits { display: grid; gap: 0; font-size: var(--type-body-s-size); line-height: var(--type-body-s-line-height); color: var(--color-text-body); }
+.credits p { margin: 0; }
+.credits em { font-style: normal; color: var(--color-text-link); }
+.credits__more { margin: 0; }
+.credits__more summary { list-style: none; cursor: pointer; padding-top: var(--space-300); font-size: var(--type-body-s-size); color: var(--color-text-link); text-decoration: underline; text-underline-offset: 0.18em; width: fit-content; }
+.credits__more summary::-webkit-details-marker { display: none; }
+.credits__label::before { content: 'Show all credits +'; }
+.credits__more[open] .credits__label::before { content: 'Hide credits −'; }
+.credits__more[open] summary { padding-bottom: var(--space-300); }
+/* End-of-page credits: heading + entries in one block; the toggle sits after the first few entries. */
+.end-credits { display: grid; gap: var(--space-400); }
+.end-credits .credits__more { display: grid; gap: var(--space-400); }
+.end-credits p { margin: 0; }
+.video { position: relative; aspect-ratio: 16 / 9; background: var(--color-bg-video); }
+.video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-pending { display: none; }
+.not-found { min-height: 100svh; display: grid; align-content: center; padding: 0 var(--page-gutter); gap: var(--space-600); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+/* keep the fixed nav readable when About / Projects content scrolls underneath it */
+/* (box size is the same in every zone so the labels never shift; only the backing colour changes) */
+.site-nav a { padding: 4px 8px; margin: -4px -8px; background: transparent; transition: color 0.3s, opacity 0.3s, background-color 0.3s; }
+body[data-zone='about'] .site-nav a { background-color: var(--color-bg-page); } /* (on Projects the header band backs them) */
+/* About in one column (phones, tablets, short windows): the bio scrolls under both labels, so they get full-width frosted
+   bands top and bottom, like the Projects header, instead of the little backing boxes. */
+.site-nav::before, .site-nav::after {
+  content: ''; position: absolute; left: 0; right: 0; z-index: -1; pointer-events: none;
+  background: var(--header-fill); -webkit-backdrop-filter: var(--header-blur); backdrop-filter: var(--header-blur);
+  opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0s 0.3s;
+}
+.site-nav::before { top: 0; height: var(--header-height); }
+.site-nav::after { bottom: 0; height: var(--footer-height); }
+@media (max-width: 1023px), (max-height: 520px) {
+  body[data-zone='about'] .site-nav::before, body[data-zone='about'] .site-nav::after { opacity: 1; visibility: visible; transition: opacity 0.3s; }
+  body[data-zone='about'] .site-nav a { background-color: transparent; }
+  body[data-zone='about'] .site-nav::before { height: calc(var(--header-height) + 10px); } /* room for the anchored name */
+}
+/* …where "Doug Hindson" stays anchored in that header band as the column scrolls (home.ts): it sits above the band, follows
+   the scroll exactly (no easing), and only it takes clicks (back to the homepage), so the labels stay clickable. */
+.js-scroll.about-anchor .sentence-layer { z-index: 11; }
+.js-scroll.about-anchor .sentence { pointer-events: none; }
+.js-scroll.about-anchor .sentence__name { pointer-events: auto; transition: color 0.8s; }
+.js-scroll.about-anchor .sentence :is(.sentence__is, .role) { transition: none; }
+
+/* Projects: the "Projects" label slides up from the bottom of the window into the stacked header (home.ts animates it). */
+
+/* First paint on /about and /projects: keep the big hero sentence out of sight until the script has positioned it. */
+.js-scroll body[data-mode='about'] .sentence:not([style]), .js-scroll body[data-mode='projects'] .sentence:not([style]) { visibility: hidden; }
+
+/* Projects: a frosted band behind the stacked labels, full width: 75% page colour over a heavy blur of whatever
+   scrolls underneath. It appears once the name has landed. */
+:root { --header-fill: color-mix(in srgb, var(--color-bg-page) 75%, transparent); --header-blur: blur(50px); }
+.site-header-bg { position: absolute; inset: 0 0 auto 0; height: var(--stack-header-h); background: var(--header-fill); -webkit-backdrop-filter: var(--header-blur); backdrop-filter: var(--header-blur); opacity: 0; pointer-events: none; }
+:root { --stack-header-h: calc(var(--header-height) / 2 + 110px); }
+@media (max-width: 767px) { :root { --stack-header-h: 136px; } }
+body[data-zone='projects'] .site-header-bg { opacity: 1; }
+.js-scroll .site-header-bg { transition: opacity 0s; }
+.js-scroll body[data-zone='projects'] .site-header-bg { transition: opacity 0s 0.8s; }
+
+/* Project pages: a link back to the Projects list at the end of the page. */
+.project-end { padding: var(--space-2000) 0 var(--space-1600); }
+.project-end__label { display: inline-block; color: var(--color-nav-default); text-decoration: none; font-size: var(--type-nav-size); line-height: 1; transition: color 0.3s; }
+.project-end__label:hover { color: var(--color-nav-active); }
+@media (max-width: 767px) { .project-end__label { font-size: 24px; } }
+
+/* The project title stays pinned under the header, and the frosted band continues behind it (across the full width of
+   the window, gutters included) so content scrolls underneath. It is one surface: two blurred boxes stacked would show
+   a seam where they meet, so on pages with one of these rows the row's backdrop reaches up behind the header labels
+   and the header's own band steps aside. (Above the row there is only page background, so covering it is harmless.) */
+.project__title, .project-filter { isolation: isolate; }
+body:has(.project-filter, .project__title) .site-header-bg { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.project__title::before, .project-filter::before {
+  content: ''; position: absolute; z-index: -1; inset: -100vh calc(-1 * var(--page-gutter)) 0;
+  background: var(--header-fill); -webkit-backdrop-filter: var(--header-blur); backdrop-filter: var(--header-blur);
+}
+.project__title {
+  position: sticky; top: var(--stack-header-h); z-index: 2;
+  padding: var(--space-300) 0 var(--space-400); margin-bottom: var(--space-600);
+  transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+/* ...and slides away with the header while scrolling down, coming back under "Projects" on the way up */
+body.header-hidden .project__title { translate: 0 calc(-1 * (var(--stack-header-h) + 100% + 8px)); }
+/* The Projects filter row does the same: pinned under the header, leaving and returning with it. */
+.project-filter {
+  position: sticky; top: var(--stack-header-h); z-index: 2;
+  padding-block: var(--space-300); margin-top: calc(-1 * var(--space-300));
+}
+.js-scroll body[data-mode='projects'] .project-filter { transition: opacity 0.5s 0.85s, visibility 0s 0.85s, translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+body.header-hidden .project-filter { translate: 0 calc(-1 * (var(--stack-header-h) + 100% + 8px)); }
+
+/* Auto-hiding header (Projects list + project pages): the whole bar slides up out of view. */
+.site-nav__bar { position: absolute; inset: 0; transition: translate 0.35s cubic-bezier(0.2, 0.7, 0.2, 1); }
+body.header-hidden .site-nav__bar { translate: 0 calc(-1 * var(--stack-header-h) - 8px); }
+
+/* Page-to-page transitions (cross-document view transitions; browsers without support just navigate).
+   The nav labels and the header band keep their identity, so they hold still or glide; the page content cross-fades. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+.site-nav .nav-about { view-transition-name: nav-about; }
+.site-nav .nav-name { view-transition-name: nav-name; }
+.site-nav .nav-projects { view-transition-name: nav-projects; }
+.site-header-bg { view-transition-name: header-bg; }
+::view-transition-group(*) { animation-duration: 0.45s; animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* Layering during the transition follows the old page's paint order, where the end-of-page "Projects" sits below the
+   header band: keep the band underneath the labels so the label never slips behind it. */
+::view-transition-group(header-bg) { z-index: 1; }
+::view-transition-group(nav-about), ::view-transition-group(nav-name), ::view-transition-group(nav-projects) { z-index: 2; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
+::view-transition-old(root) { animation: vt-out 0.15s both; }
+::view-transition-new(root) { animation: vt-in 0.3s 0.1s both; }
+/* Arriving on /projects: the stacked Projects label is already in place (no delayed reveal on first paint). */
+.js-scroll.no-reveal body[data-zone='projects'] .site-nav .nav-projects { animation: none; }
+
+/* ---------- responsive adjustments ---------- */
+/* Phones and small tablets: the content column fills the space between the gutters (the 343px design width is the
+   iPhone case, not a cap), so text, the sentence and the project grid use larger phones and portrait tablets fully. */
+@media (max-width: 767px) {
+  :root { --content-width: calc(100vw - var(--sbw, 0px) - 2 * var(--page-gutter)); }
+}
+/* Short, wide windows (phones in landscape, small laptop windows): a slimmer header and footer and smaller nav labels,
+   so the sentence and an open role image fit between them. */
+@media (min-width: 768px) and (max-height: 520px) {
+  :root { --header-height: 64px; --footer-height: 56px; --stack-header-h: calc(var(--header-height) / 2 + 76px); }
+  .site-nav a { font-size: 20px; }
+  body[data-zone='projects'] .nav-name { top: calc(var(--header-height) / 2 + 28px); }
+  body[data-zone='projects'] .nav-projects { top: calc(var(--header-height) / 2 + 56px); }
+  .zone-projects { padding-top: calc(var(--stack-header-h) + 32px); }
+  .about__title { font-size: 26px; }
+}
+
+/* Hover arrows: a "→" fades in where the label starts and nudges the word to the right (transforms only, so nothing
+   around it reflows). Mouse / keyboard only. */
+.nav-arrow { position: absolute; left: 0; top: 50%; translate: -6px -50%; opacity: 0; pointer-events: none; }
+.nav-label { display: inline-block; }
+.nav-arrow, .nav-label { transition: opacity 0.2s, translate 0.25s cubic-bezier(0.2, 0.7, 0.2, 1); }
+a:hover > .nav-arrow, a:focus-visible > .nav-arrow { opacity: 1; translate: 0 -50%; }
+a:hover > .nav-label, a:focus-visible > .nav-label { translate: 1.15em 0; }
+@media (hover: none) { .nav-arrow { display: none; } .nav-label { translate: none !important; } }
+.project-end__label, .project-filter a { position: relative; }
+
+/* Projects: filter row (under the header band) and Back to top (bottom left) */
+.project-filter { display: flex; flex-wrap: wrap; gap: var(--space-200) var(--space-800); width: min(100%, var(--content-width)); margin-bottom: calc(var(--space-1000) - var(--space-300)); }
+.project-filter a { color: #716d66; /* a touch darker than the nav grey: at this size it needs 4.5:1 contrast */ text-decoration: none; font-size: 19px; line-height: 1.3; padding: 0 0 0 8px; margin-left: -8px; transition: color 0.2s, padding-left 0.25s cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* in the filter row the arrow makes real room (padding, not a transform), so the filters after it move along too */
+.project-filter .nav-arrow { left: 8px; }
+@media (hover: hover) { .project-filter a:is(:hover, :focus-visible) { padding-left: calc(8px + 1.15em); } }
+.project-filter a:is(:hover, :focus-visible) > .nav-label { translate: none; }
+.project-filter a:hover, .project-filter a[aria-current='true'] { color: var(--color-nav-active); }
+.project-grid li[hidden] { display: none; }
+.back-to-top { position: relative; display: inline-block; margin-top: var(--space-1600); color: var(--color-nav-default); text-decoration: none; font-size: var(--type-nav-size); line-height: 1; transition: color 0.2s; }
+.back-to-top:hover { color: var(--color-nav-active); }
+@media (max-width: 767px) { .back-to-top { font-size: 24px; } }
+/* its "↑" rises from below instead of sliding in from the left; on touch it simply stays in place */
+.back-to-top .nav-arrow { translate: 0 calc(-50% + 0.4em); }
+.back-to-top:is(:hover, :focus-visible) > .nav-arrow { translate: 0 -50%; }
+/* the words clear the way before the arrow rises, and the arrow drops away before they slide back */
+.back-to-top .nav-label { transition-delay: 0.12s; }
+.back-to-top:is(:hover, :focus-visible) > .nav-label { transition-delay: 0s; }
+.back-to-top:is(:hover, :focus-visible) > .nav-arrow { transition-delay: 0.12s; }
+.back-to-top:is(:hover, :focus-visible) > .nav-label { translate: 0.85em 0; }
+@media (hover: none) { .back-to-top .nav-arrow { display: block; opacity: 1; translate: 0 -50%; } .back-to-top .nav-label { translate: 0.85em 0 !important; } }
+
+/* About: "Doug Hindson" at the top of the column leads back to the homepage */
+.js-scroll body[data-mode='about'] .sentence__name { cursor: pointer; }
+a.sentence__name { text-decoration: none; }

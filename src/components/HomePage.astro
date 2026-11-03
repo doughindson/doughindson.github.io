@@ -1,0 +1,21 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteNav from './SiteNav.astro';
+import Hero from './Hero.astro';
+import AboutZone from './AboutZone.astro';
+import ProjectsZone from './ProjectsZone.astro';
+interface Props { zone: 'hero' | 'about' | 'projects'; title: string; description?: string }
+const { zone, title, description } = Astro.props;
+---
+<Base title={title} description={description} zone={zone}>
+  <script slot="head" is:inline>document.documentElement.classList.add('js'); if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('js-scroll', 'no-reveal');</script>
+  <noscript><style>.zone-about { display: none; } body[data-zone='about'] .zone-about { display: block; }</style></noscript>
+  <a class="skip-link" href="#projects">Skip to projects</a>
+  <SiteNav />
+  <main>
+    <AboutZone />
+    <Hero />
+    <ProjectsZone />
+  </main>
+  <script>import '../scripts/home.ts';</script>
+</Base>

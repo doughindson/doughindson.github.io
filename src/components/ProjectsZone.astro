@@ -1,0 +1,32 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture } from 'astro:assets';
+import { roles } from '../data/roles';
+const projects = (await getCollection('pages', (p) => p.data.type === 'project')).sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+// Only roles that have at least one project get a filter (Photography appears once a project is tagged with it).
+const filters = roles.filter((r) => projects.some((p) => p.data.roles.includes(r.slug)));
+---
+<section id="projects" class="zone zone-projects" aria-label="Projects" data-zone-section="projects">
+  <h2 class="sr-only">Projects</h2>
+  <nav class="project-filter" aria-label="Filter projects by role" data-project-filter>
+    <a href="/projects" data-filter="all" aria-current="true"><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">All projects</span></a>
+    {filters.map((r) => (
+      <a href={`/projects?role=${r.slug}`} data-filter={r.slug}><span class="nav-arrow" aria-hidden="true">→</span><span class="nav-label">{r.filterLabel}</span></a>
+    ))}
+  </nav>
+  <ul class="project-grid">
+    {projects.map((p) => (
+      <li data-roles={p.data.roles.join(' ')}>
+        <a class="card" href={`/projects/${p.data.slug}`}>
+          <span class="card__media">
+          {p.data.cover_image && <Picture src={p.data.cover_image} alt="" widths={[480, 800, 1200]} sizes="(max-width: 767px) 94vw, 595px" formats={['avif', 'webp']} fallbackFormat="webp" loading="lazy" />}
+          <span class="card__title" aria-hidden="true">{p.data.title}</span>
+          </span>
+          <span class="card__caption">{p.data.title}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+  <a class="back-to-top" href="#projects" data-back-to-top><span class="nav-arrow" aria-hidden="true">↑</span><span class="nav-label">Back to top</span></a>
+</section>
+<script>import '../scripts/projects-filter.ts';</script>

@@ -1,0 +1,19 @@
+{
+  "name": "tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cheerio": "1.1.2",
+    "ffmpeg-static": "5.2.0",
+    "playwright": "1.56.1",
+    "turndown": "7.2.1"
+  }
+}

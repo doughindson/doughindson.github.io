@@ -1,0 +1,27 @@
+---
+import { Picture } from 'astro:assets';
+import { roles } from '../data/roles';
+---
+<section id="top" class="zone zone-hero" aria-label="Introduction" data-zone-section="hero">
+  <div class="hero-track" data-hero-track>
+    <div class="hero-stage">
+      <div class="sentence-layer" data-sentence-layer>
+      <h1 class="sentence display" data-sentence>
+        <span class="sentence__intro"><span class="sentence__name">Doug Hindson</span><span class="sentence__is"> is a</span></span>
+        {roles.map((role, i) => (
+          <span class="role" data-role={i}>
+            {role.prefix}<button type="button" class="role__button" data-role-button={i} data-role-slug={role.slug}>{role.label}</button>{role.punctuation}
+            <span class="role__media" aria-hidden="true" data-slideshow={role.slideshow.style} data-hold={role.slideshow.hold}>
+              <span class="role__media-inner">
+                {role.images.map((img, k) => (
+                  <Picture src={img} alt="" width={1440} widths={[640, 1000, 1440]} sizes="(max-width: 767px) 94vw, 1000px" formats={['avif', 'webp']} fallbackFormat="webp" loading={i === 0 && k === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 && k === 0 ? 'high' : 'auto'} data-slide={k} />
+                ))}
+              </span>
+            </span>
+          </span>
+        ))}
+      </h1>
+      </div>
+    </div>
+  </div>
+</section>
