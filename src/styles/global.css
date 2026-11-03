@@ -48,7 +48,7 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 }
 .site-nav a:hover, .site-nav a[aria-current='true'] { color: var(--color-nav-active); }
 .site-nav .nav-about { top: calc(var(--header-height) / 2); left: var(--page-gutter); transform: translateY(-50%); }
-.site-nav .nav-projects { bottom: calc(var(--footer-height) / 2); left: var(--page-gutter); transform: translateY(50%); }
+.site-nav .nav-projects { bottom: calc(var(--header-height) / 2); left: var(--page-gutter); transform: translateY(50%); } /* mirrors About: same distance from the bottom edge as About is from the top */
 .site-nav .nav-name { top: calc(var(--header-height) / 2 + 40px); left: var(--page-gutter); transform: translateY(-50%); opacity: 0; pointer-events: none; font-weight: 400; } /* the homepage sentence's weight, so the name keeps it as it lands here */
 /* projects: About / Doug Hindson / Projects stacked at the top */
 body[data-zone='projects'] .nav-projects { top: calc(var(--header-height) / 2 + 80px); bottom: auto; transform: translateY(-50%); }

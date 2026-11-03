@@ -551,32 +551,23 @@ if (interactive) {
     pending = window.setTimeout(() => { if (mode === 'hero' && !locked) setRole(i); }, 0); // switch as soon as the pointer crosses into a band
   };
   if (canHover) {
-    // Opening a role moves the words under a still pointer, which could open another role and flip straight back. So a
-    // band holds on a little past its edges, and after each switch the pointer has to really move before the next one.
-    const HOLD_BAND = 0.2; // of a band's height
-    const MOVE_PX = 12;
+    // The role whose row the pointer is in opens: its line of text plus, when open, its image, across the full width of
+    // the window. Rows stay put under the pointer as roles open and close (the sentence keeps its height while one image
+    // grows as the other shrinks, and a newly opened image grows out from under its own line), so this never flips back
+    // and forth. Above or below the sentence, and on its first line, everything closes. Events from the pointer barely
+    // moving (MOVE_PX) are ignored, so a layout change alone never switches anything.
+    const MOVE_PX = 4;
     let switchedAtY = NaN;
     addEventListener('mousemove', (e) => {
       if (mode !== 'hero' || locked) return;
       if (Math.abs(e.clientY - switchedAtY) < MOVE_PX) return;
-      const over = (e.target as HTMLElement).closest?.<HTMLElement>('[data-role-button]');
-      let next: number;
-      if (over) next = Number(over.dataset.roleButton);
-      else {
-        const css = getComputedStyle(root);
-        const top = parseFloat(css.getPropertyValue('--header-height'));
-        const bottom = innerHeight - parseFloat(css.getPropertyValue('--footer-height'));
-        const t = (e.clientY - top) / (bottom - top);
-        if (t < 0) return; // over the header: leave things as they are
-        const n = roleEls.length + 1;
-        const cur = activeRole + 1;
-        const band = Math.min(n - 1, Math.floor(t * n));
-        next = (t > (cur - HOLD_BAND) / n && t < (cur + 1 + HOLD_BAND) / n ? cur : band) - 1;
-        // below the last role (its image too, when open): everything closes again
-        if (e.clientY > roleEls[roleEls.length - 1].getBoundingClientRect().bottom + 24) next = -1;
-      }
+      const y = e.clientY;
+      // (each row runs down to where the next begins, so the small gap an open image leaves below itself still belongs to it)
+      const tops = roleEls.map((el) => el.getBoundingClientRect().top);
+      const lastBottom = roleEls[roleEls.length - 1].getBoundingClientRect().bottom;
+      const next = tops.findIndex((top, k) => y >= top && y < (tops[k + 1] ?? lastBottom));
       if (next === activeRole) return;
-      switchedAtY = e.clientY;
+      switchedAtY = y;
       want(next);
     }, { passive: true });
     root.addEventListener('mouseleave', () => { switchedAtY = NaN; want(-1); });
