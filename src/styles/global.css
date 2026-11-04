@@ -116,6 +116,9 @@ body[data-zone='projects'] .nav-name { opacity: 1; pointer-events: auto; top: ca
 /* interactive (JS + motion allowed): sticky stage, roles open one at a time as you scroll */
 /* The hero is one screen: scrolling only moves between About, the hero and Projects. Roles open on hover / pointer position. */
 .js-scroll .hero-track { height: 100svh; }
+/* phones and tablets: scrolling through the hero opens the roles in turn (home.ts), so it gets room to scroll: a first
+   stretch with nothing open, then one step per role */
+@media not ((hover: hover) and (pointer: fine)) { .js-scroll .hero-track { height: calc(100svh + 4.5 * 22svh); } }
 .js-scroll .hero-stage { position: sticky; top: 0; height: 100svh; min-height: 0; }
 .sentence-layer { display: contents; }
 .js-scroll .sentence-layer { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; padding: var(--header-height) var(--page-gutter) var(--footer-height); pointer-events: none; }

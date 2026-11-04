@@ -52,6 +52,14 @@ let settleTimer: number | undefined;
 let morphTimer: number | undefined;
 
 const maxScroll = () => track.offsetHeight - innerHeight;
+// Phones and tablets (no hover): scrolling through the hero opens the roles one after another. The hero is made taller for
+// it (global.css); each role gets ROLE_STEP of it, after a first stretch where nothing is open.
+const touchRoles = interactive && !matchMedia('(hover: hover) and (pointer: fine)').matches;
+let roleScrollY = NaN;
+const roleForScroll = (y: number) => {
+  const step = maxScroll() / (roleEls.length + 0.5);
+  return Math.max(-1, Math.min(roleEls.length - 1, Math.floor((y - heroTop()) / step - 0.5)));
+};
 const heroTop = () => track.getBoundingClientRect().top + scrollY;
 const trackEnd = () => heroTop() + maxScroll();
 const scrollToY = (y: number, smooth = true) => scrollTo({ top: y, behavior: smooth && !reduced ? 'smooth' : 'auto' });
@@ -332,6 +340,10 @@ function update() {
   setZone(next);
   if (interactive) {
     if (mode === 'about') setRole(-1);
+    else if (mode === 'hero' && touchRoles && !locked && !(Math.abs(y - roleScrollY) <= 2)) {
+      roleScrollY = y; // (only an actual scroll picks the role, so a resize or the autoplay below is never undone)
+      setRole(roleForScroll(y));
+    }
     placeSentence();
   }
 }
@@ -540,6 +552,29 @@ document.querySelectorAll<HTMLAnchorElement>('[data-zone-link]').forEach((a) => 
 });
 // On About, "Doug Hindson" at the top of the column is a way back to the homepage.
 nameEl.addEventListener('click', () => { if (interactive && mode === 'about') navigate('hero'); });
+
+// Phones and tablets: left alone on the homepage for IDLE_MS, the roles start opening by themselves, one after another
+// (each for a full round of its slideshow, within AUTO_MIN_MS..AUTO_MAX_MS), looping. Any touch, scroll or key stops
+// that and starts the wait again.
+const IDLE_MS = 5000, AUTO_MIN_MS = 3000, AUTO_MAX_MS = 6000;
+let idleTimer: number | undefined;
+function autoplayNext() {
+  if (mode !== 'hero' || locked) { idleSoon(); return; }
+  const i = (activeRole + 1) % roleEls.length;
+  setRole(i);
+  const media = roleEls[i].querySelector<HTMLElement>('.role__media');
+  const frames = media?.querySelectorAll('picture').length ?? 1;
+  const ms = Math.min(AUTO_MAX_MS, Math.max(AUTO_MIN_MS, frames * (Number(media?.dataset.hold) || 1200)));
+  idleTimer = window.setTimeout(autoplayNext, ms);
+}
+function idleSoon() {
+  window.clearTimeout(idleTimer);
+  idleTimer = window.setTimeout(autoplayNext, IDLE_MS);
+}
+if (touchRoles) {
+  ['touchstart', 'scroll', 'keydown', 'wheel', 'pointerdown'].forEach((t) => addEventListener(t, idleSoon, { passive: true }));
+  idleSoon();
+}
 
 // Roles. With a mouse: the page is split into horizontal bands (top band = the intro line, then one per role) and the band
 // under the pointer opens; hovering a role name opens that one. Touch: tap a role to open / close it. Keyboard: focus opens.
